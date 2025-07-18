@@ -6,18 +6,24 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const [selectedName, setSelectedName] = useState<string>('');
   const [isRevealed, setIsRevealed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminDialogOpen, setIsAdminDialogOpen] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [namesList, setNamesList] = useState([
     'Александр', 'Мария', 'Дмитрий', 'Анна', 'Сергей', 'Елена', 'Павел', 'Ольга', 
     'Андрей', 'Татьяна', 'Максим', 'Светлана', 'Николай', 'Ирина', 'Владимир',
     'Екатерина', 'Роман', 'Наталья', 'Алексей', 'Юлия', 'Игорь', 'Валентина'
   ]);
   const [newName, setNewName] = useState('');
+  
+  const ADMIN_PASSWORD = 'chuvyrla2024';
 
   const selectRandomName = () => {
     const randomIndex = Math.floor(Math.random() * namesList.length);
@@ -39,6 +45,29 @@ const Index = () => {
 
   const removeName = (name: string) => {
     setNamesList(namesList.filter(n => n !== name));
+  };
+
+  const handleAdminLogin = () => {
+    if (adminPassword === ADMIN_PASSWORD) {
+      setIsAdmin(true);
+      setIsAdminDialogOpen(false);
+      setAdminPassword('');
+      setPasswordError('');
+    } else {
+      setPasswordError('Неверный пароль');
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdmin(false);
+    setAdminPassword('');
+    setPasswordError('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAdminLogin();
+    }
   };
 
   return (
@@ -97,21 +126,86 @@ const Index = () => {
             )}
           </div>
 
-          <Separator className="my-12" />
+          {isAdmin && (
+            <>
+              <Separator className="my-12" />
+              <div className="flex justify-center mb-8">
+                <Button
+                  onClick={handleAdminLogout}
+                  variant="outline"
+                  className="bg-red-600 hover:bg-red-700 text-white border-red-600"
+                >
+                  <Icon name="LogOut" className="mr-2" size={18} />
+                  Выйти из админ-панели
+                </Button>
+              </div>
+            </>
+          )}
 
-          <div className="flex justify-center mb-8">
-            <Button
-              onClick={() => setIsAdmin(!isAdmin)}
-              variant={isAdmin ? "default" : "outline"}
-              className="bg-gray-600 hover:bg-gray-700 text-white"
-            >
-              <Icon name="Settings" className="mr-2" size={18} />
-              {isAdmin ? 'Выйти из админ-панели' : 'Админ-панель'}
-            </Button>
+          <div className="fixed bottom-4 right-4">
+            <Dialog open={isAdminDialogOpen} onOpenChange={setIsAdminDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="opacity-30 hover:opacity-100 transition-opacity bg-gray-100 hover:bg-gray-200 text-gray-600"
+                >
+                  <Icon name="Settings" size={16} />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-center">
+                    <Icon name="Shield" className="mx-auto mb-2" size={24} />
+                    Вход в админ-панель
+                  </DialogTitle>
+                  <DialogDescription className="text-center">
+                    Введите пароль для доступа к панели управления
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="password">Пароль</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Введите пароль..."
+                      className="mt-1"
+                    />
+                    {passwordError && (
+                      <p className="text-sm text-red-600 mt-1">{passwordError}</p>
+                    )}
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsAdminDialogOpen(false);
+                        setAdminPassword('');
+                        setPasswordError('');
+                      }}
+                    >
+                      Отмена
+                    </Button>
+                    <Button
+                      onClick={handleAdminLogin}
+                      disabled={!adminPassword.trim()}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Icon name="Check" className="mr-2" size={16} />
+                      Войти
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {isAdmin && (
-            <Card className="animate-fade-in shadow-xl border-2 border-gray-200">
+            <Card className="animate-fade-in shadow-xl border-2 border-gray-200 mt-8">
               <CardHeader className="bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-t-lg">
                 <CardTitle className="text-2xl font-bold">
                   <Icon name="Users" className="mr-2" size={24} />
